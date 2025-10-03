@@ -67,7 +67,7 @@ verbosity: 1
 # =====================================
 #
 # risky-file-permissions (warning only):
-#   - roles/01_host_info/tasks/main.yml:2 - ansible_facts.yml file
+#   - roles/01_host_info/tasks/main.yml - ansible_facts.yml file
 #     The generated facts file doesn't need strict permissions as it contains
 #     non-sensitive system information
 #
