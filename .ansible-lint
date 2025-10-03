@@ -44,6 +44,7 @@ enable_list:
   - empty-string-compare   # Prefer 'length > 0' over '!= ""'
   - no-log-password        # Ensure passwords are not logged (vault security)
   - no-same-owner          # Check file ownership settings
+  - latest[git]  # Warn about using latest version in git repos but don't fail
 
 # Enable offline mode to avoid Galaxy API calls
 # This repository is self-contained and doesn't need external dependencies during linting
