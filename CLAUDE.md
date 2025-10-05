@@ -44,7 +44,7 @@ Contains sensitive environment variables. Protected by pre-tool-use hooks - cann
 ├── .env                # Protected environment variables
 ├── .hosts              # Inventory file (localhost)
 ├── run.sh              # Playbook execution script (ALWAYS use this)
-├── test.sh             # Local testing script (static analysis)
+├── test.sh             # Local testing script (run before pushing)
 ├── requirements.yml    # Ansible collections requirements
 ├── playbooks/          # Ansible playbooks
 │   └── all.yml         # Main playbook
