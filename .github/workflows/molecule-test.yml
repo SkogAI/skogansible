@@ -21,6 +21,8 @@ jobs:
   molecule:
     name: Molecule Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         role:
