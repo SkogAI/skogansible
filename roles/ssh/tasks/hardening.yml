@@ -27,19 +27,38 @@
         owner: "{{ ansible_facts['user_id'] }}"
         group: "{{ ansible_facts['user_id'] }}"
 
+    - name: "SSH Hardening | Find private keys"
+      ansible.builtin.find:
+        paths: "{{ ssh_dir }}"
+        patterns: "id_*"
+        excludes: "*.pub"
+        file_type: file
+      register: ssh_private_keys_found
+
     - name: "SSH Hardening | Ensure strict permissions on private keys"
-      ansible.builtin.shell:
-        cmd: "find {{ ssh_dir }} -type f -name 'id_*' ! -name '*.pub' -exec chmod 0600 {} \\;"
-      changed_when: false
-      register: ssh_key_permissions
-      failed_when: false
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        mode: "0600"
+        owner: "{{ ansible_facts['user_id'] }}"
+        group: "{{ ansible_facts['user_id'] }}"
+      loop: "{{ ssh_private_keys_found.files }}"
+      when: ssh_private_keys_found.files | length > 0
+
+    - name: "SSH Hardening | Find public keys"
+      ansible.builtin.find:
+        paths: "{{ ssh_dir }}"
+        patterns: "*.pub"
+        file_type: file
+      register: ssh_public_keys_found
 
     - name: "SSH Hardening | Ensure proper permissions on public keys"
-      ansible.builtin.shell:
-        cmd: "find {{ ssh_dir }} -type f -name '*.pub' -exec chmod 0644 {} \\;"
-      changed_when: false
-      register: ssh_pubkey_permissions
-      failed_when: false
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        mode: "0644"
+        owner: "{{ ansible_facts['user_id'] }}"
+        group: "{{ ansible_facts['user_id'] }}"
+      loop: "{{ ssh_public_keys_found.files }}"
+      when: ssh_public_keys_found.files | length > 0
 
 # ==============================================================================
 # SSH Server Hardening (System-wide /etc/ssh/sshd_config)
@@ -167,6 +186,15 @@
     - ssh_hardening_server_enabled | default(false)
   become: true
   block:
+    - name: "SSH Hardening | Ensure systemd socket override directory exists"
+      ansible.builtin.file:
+        path: /etc/systemd/system/sshd.socket.d
+        state: directory
+        mode: "0755"
+        owner: root
+        group: root
+      when: ansible_facts['service_mgr'] == 'systemd'
+
     - name: "SSH Hardening | Configure systemd socket limits"
       ansible.builtin.template:
         src: "{{ ssh_hardening_socket_template | default('sshd.socket.j2') }}"

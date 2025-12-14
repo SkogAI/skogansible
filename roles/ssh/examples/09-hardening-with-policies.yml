@@ -16,8 +16,8 @@
   
   vars:
     ansible_become_password: "{{ lookup('env', 'ANSIBLE_BECOME_PASSWORD') }}"
-
-  vars:
+    
+    # Hardening configuration
     # Enable SSH hardening
     ssh_hardening_enabled: true
     
