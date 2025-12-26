@@ -287,6 +287,8 @@ ssh_hardening_rekey_limit_time: "1h"
 # ==============================================================================
 
 ssh_hardening_fail2ban_enabled: true
+# Note: logpath is ignored when backend is 'systemd' (Arch Linux, modern Debian/Ubuntu)
+# systemd backend reads from journald directly
 ssh_hardening_fail2ban_logpath: "/var/log/auth.log"
 ssh_hardening_fail2ban_maxretry: 3
 ssh_hardening_fail2ban_findtime: 600

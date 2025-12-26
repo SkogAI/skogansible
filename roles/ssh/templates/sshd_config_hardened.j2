@@ -169,8 +169,9 @@ LogLevel {{ ssh_hardening_server_log_level | default('VERBOSE') }}
 # Strict mode (check permissions on home dir, .ssh, etc.)
 StrictModes {{ ssh_hardening_strict_modes | default('yes') }}
 
-# Use privilege separation
-UsePrivilegeSeparation {{ ssh_hardening_use_privilege_separation | default('sandbox') }}
+# Use privilege separation (deprecated in OpenSSH 7.5+, removed in 7.8+)
+# Modern OpenSSH always uses sandbox mode, this directive is ignored
+# UsePrivilegeSeparation {{ ssh_hardening_use_privilege_separation | default('sandbox') }}
 
 # Compression (delayed until after authentication)
 Compression {{ ssh_hardening_server_compression | default('no') }}

@@ -8,6 +8,10 @@
 
 - name: "SSH Hardening | Client-side hardening"
   when: ssh_hardening_client_enabled | default(false)
+  tags:
+    - ssh
+    - ssh-hardening
+    - ssh-hardening-client
   block:
     - name: "SSH Hardening | Deploy hardened SSH client config"
       ansible.builtin.template:
@@ -67,6 +71,10 @@
 - name: "SSH Hardening | Server-side hardening"
   when: ssh_hardening_server_enabled | default(false)
   become: true
+  tags:
+    - ssh
+    - ssh-hardening
+    - ssh-hardening-server
   block:
     - name: "SSH Hardening | Backup current sshd_config"
       ansible.builtin.copy:
@@ -100,10 +108,14 @@
 # ==============================================================================
 
 - name: "SSH Hardening | Remove weak SSH key algorithms"
-  when: 
+  when:
     - ssh_hardening_remove_weak_keys | default(false)
     - ssh_hardening_server_enabled | default(false)
   become: true
+  tags:
+    - ssh
+    - ssh-hardening
+    - ssh-hardening-keys
   block:
     - name: "SSH Hardening | Disable DSA host keys"
       ansible.builtin.file:
@@ -142,7 +154,26 @@
 - name: "SSH Hardening | Apply security policies"
   when: ssh_hardening_policies_enabled | default(false)
   become: true
+  tags:
+    - ssh
+    - ssh-hardening
+    - ssh-hardening-policies
   block:
+    - name: "SSH Hardening | Gather package facts"
+      ansible.builtin.package_facts:
+        manager: auto
+      when: ssh_hardening_configure_fail2ban | default(false)
+
+    - name: "SSH Hardening | Verify fail2ban package exists"
+      ansible.builtin.assert:
+        that:
+          - "'fail2ban' in ansible_facts.packages"
+        fail_msg: >-
+          Fail2Ban not installed.
+          Install: sudo pacman -S fail2ban (Arch) or sudo apt install fail2ban (Debian/Ubuntu)
+        success_msg: "Fail2Ban package detected"
+      when: ssh_hardening_configure_fail2ban | default(false)
+
     - name: "SSH Hardening | Configure PAM for SSH"
       ansible.builtin.lineinfile:
         path: /etc/pam.d/sshd
@@ -160,9 +191,10 @@
         mode: "0644"
         owner: root
         group: root
-      when: 
+      when:
         - ssh_hardening_configure_fail2ban | default(false)
         - ansible_facts['os_family'] == "Archlinux" or ansible_facts['os_family'] == "Debian"
+        - "'fail2ban' in ansible_facts.packages"
       notify: restart fail2ban
 
     - name: "SSH Hardening | Create SSH banner"
@@ -172,7 +204,7 @@
         mode: "0644"
         owner: root
         group: root
-      when: 
+      when:
         - ssh_hardening_enable_banner | default(false)
         - ssh_hardening_banner_content is defined
 
@@ -181,10 +213,14 @@
 # ==============================================================================
 
 - name: "SSH Hardening | Configure connection limits"
-  when: 
+  when:
     - ssh_hardening_connection_limits | default(false)
     - ssh_hardening_server_enabled | default(false)
   become: true
+  tags:
+    - ssh
+    - ssh-hardening
+    - ssh-hardening-limits
   block:
     - name: "SSH Hardening | Ensure systemd socket override directory exists"
       ansible.builtin.file:
@@ -213,6 +249,10 @@
 
 - name: "SSH Hardening | Audit SSH configuration"
   when: ssh_hardening_audit_enabled | default(false)
+  tags:
+    - ssh
+    - ssh-hardening
+    - ssh-hardening-audit
   block:
     - name: "SSH Hardening | Check SSH client configuration"
       ansible.builtin.command:
@@ -238,6 +278,6 @@
     - name: "SSH Hardening | Display server configuration summary"
       ansible.builtin.debug:
         msg: "SSH server configuration validated successfully"
-      when: 
+      when:
         - ssh_hardening_server_enabled | default(false)
         - ssh_server_config_check.rc == 0
