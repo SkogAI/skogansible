@@ -1,0 +1,16 @@
+---
+# Ensure skogai group exists and all users are members
+
+- name: Ensure skogai group exists
+  become: true
+  ansible.builtin.group:
+    name: skogai
+    state: present
+
+- name: Add users to their configured groups
+  become: true
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    groups: "{{ item.groups_base }}"
+    append: true
+  loop: "{{ users }}"
